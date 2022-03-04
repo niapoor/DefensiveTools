@@ -11,7 +11,7 @@ MENU_INPUT=0
 # Variables to edit based off of the competition topology
 SCORING_PORT=631
 
-
+# A function that prints a message of all options to the user
 function print_menu()
 {
     # Clearing the terminal
@@ -23,17 +23,135 @@ function print_menu()
     printf "\t========================================\n"
     # Printing the options from the menu
     printf "\nEnter Selection:\n"
-    printf "\t1 - List ${YELLOW}all ports${WHITE} that are currently listening\n"
-    printf "\t2 - Check if a ${YELLOW}specific port${WHITE} is listening\n"
-    printf "\t3 - Check if the ${YELLOW}scoring port${WHITE} is listening\n"
-    printf "\t4 - EDIT\n"
-    printf "\t5 - List ${YELLOW}all${WHITE} currently enabled users\n"
-    printf "\t6 - Disable a ${YELLOW}user of choice${WHITE}\n"
-    printf "\t7 - List potentially suspicious ${YELLOW}log information${WHITE}\n"
-    printf "\t8 - List ${YELLOW}running processes${WHITE} and pick one to ${YELLOW}inspect${WHITE}\n\n"
+    printf "\t1  - List ${YELLOW}all ports${WHITE} that are currently listening\n"
+    printf "\t2  - Check if a ${YELLOW}specific port${WHITE} is listening\n"
+    printf "\t3  - Check if the ${YELLOW}scoring port${WHITE} is listening\n"
+    printf "\t4  - EDIT\n"
+    printf "\t5  - List ${YELLOW}all${WHITE} currently enabled users\n"
+    printf "\t6  - Disable a ${YELLOW}user of choice${WHITE}\n"
+    printf "\t7  - List potentially suspicious ${YELLOW}log information${WHITE}\n"
+    printf "\t8  - List ${YELLOW}running processes${WHITE} and pick one to ${YELLOW}inspect${WHITE}\n"
+    printf "\t9  - Change the permissions of an input ${YELLOW}file${WHITE}\n"
+    printf "\t10 - ${YELLOW}Quarantine${WHITE} a file of choice\n"
+    printf "\t11 - Print the list of ${YELLOW}quarantined file paths${WHITE}\n\n"
     read -e -p "Choose an option from the menu (1-6) or enter q/Q to quit: " MENU_INPUT
     # Prompting the user for input
 
+}
+
+# THIS FUNCTION IS NOT IMPLEMENTED
+# Lists the status of all services or all services that are running
+function list_service_status
+{
+    # Loop through while there is no valid input
+    while [ "$INPUT" != 1 ] && [ "$INPUT" != 2 ]; do
+        clear
+        # Prompt the user for input
+        read -e -p "Input \"1\" to list the status of all services, or \"2\" to list all running services. " INPUT
+        # If the user seletcs option 1, print the status of all services
+        if [ "$INPUT" == 1 ]
+        then
+            sudo service --status-all
+        # If the user seletcs option 2, print all currently running services
+        elif [ "$INPUT" == 2 ]
+        then
+            sudo service --status-all | grep "+"
+        # If the user enters invalid input make them try again
+        else
+            echo -e "${RED}Invalid entry${WHITE}, please try again"
+            sleep 1
+        fi
+    done
+    echo
+    # The user should only leave once they're ready
+    read -e -p "\"+\" means running, \"-\" means not running. Input any character when you are ready to be sent back to the menu. " TEMP
+}
+
+# Sets the desired permissions for an input file
+function file_permissions_setter()
+{
+    clear
+    printf "========= ${GREEN}File Permissions Setter${WHITE} =========\n"
+    # Prompts the user for a file to set the permisisons of
+    read -e -p "Enter the path for a file to remove the permissions of. " FILE
+    if [ -f "$FILE" ]; then
+        # Prompt the user for which file permissions there should be
+        read -e -p "Enter \"1\" to make the file unexecutable (666), \"2\" to make it unwritable AND unexecutable (444), or \"3\" to disable the file completely (000). " PERMS
+        echo
+        # If the user selects option 1, make the file non executable
+        if [ "$PERMS" == 1 ]; then
+            chmod 666 $FILE
+            echo -e "${GREEN}${FILE}${WHITE} permissions changed ${GREEN}successfully${WHITE} (666)."
+        # If the user selects option 2, make the file non executable and non writable
+        elif [ "$PERMS" == 2 ]; then
+            chmod 444 $FILE
+            echo -e "${GREEN}${FILE}${WHITE} permissions changed ${GREEN}successfully${WHITE} (444)."
+        # If the user selects option 1, entirely disable the file
+        elif [ "$PERMS" == 3 ]; then
+            chmod 000 $FILE
+            echo -e "${GREEN}${FILE}${WHITE} permissions changed ${GREEN}successfully${WHITE} (000)."
+        # Let the user know if they entered an invalid option
+        else
+            echo "An ${RED}invalid option${WHITE} was entered."
+        fi
+    # Let the user know if the file does not exist
+    else
+        echo "The file ${RED}\"${FILE}\"${WHITE} could not be found."
+    fi
+    echo
+    # Only exit when the user is ready to do so
+    read -e -p "Input any character when you are ready to be sent back to the menu. " TEMP
+}
+
+# A function that puts a file of choice into quarantine
+function file_quarantine()
+{
+    # Header
+    clear
+    printf "\t===============================================================\n"
+    printf "\t========= ${GREEN}Quarantined Files (/bin/mounting/paths.txt)${WHITE} =========\n"
+    printf "\t===============================================================\n\n"
+    # Prompts the user for a file to set the permisisons of
+    read -e -p "Enter the path for a file to quarantine. " FILE
+    if [ -f "$FILE" ]; then
+        # Make a directory (hopefully unalarming name) to store quarantined files
+        sudo mkdir /bin/mounting 2> /dev/null
+        # Move the file to the new directory
+        sudo mv $FILE /bin/mounting/
+        # Save the name of the file
+        FILE_NAME=("$(echo $FILE | awk -F'[/]' '{print $NF}')")
+        touch /bin/mounting/paths.txt 2> /dev/null
+        # Save the path to a file of paths
+        echo -e "${RED}${FILE}${WHITE}\t-->\t${GREEN}/bin/mounting/${FILE_NAME}${WHITE}" | sudo tee -a /bin/mounting/paths.txt > /dev/null
+        # Allow the file to only be read
+        sudo chmod 444 /bin/mounting/$FILE_NAME
+        # Print that the file was quarantined
+        echo -e "File quarantined ${GREEN}successfully${WHITE}!"
+    # Print that the file could not be found if it could not be found
+    else
+        echo -e "The file ${RED}\"${FILE}\"${WHITE} could not be found."
+    fi
+    echo
+    # Only return to the menu when the user is ready
+    read -e -p "Input any character when you are ready to be sent back to the menu. " TEMP
+}
+
+# List the file paths that are quarantined
+function list_file_quarantine()
+{
+    # Header
+    clear
+    printf "\t========= ${GREEN}List of Quarantined Files${WHITE} =========\n\n"
+    # If the paths text file exists, print it
+    if [ -f /bin/mounting/paths.txt ]; then
+        cat /bin/mounting/paths.txt
+    # If the paths text file doesn't exist, nothing has been quarantined
+    else
+        echo "No files have been quarantined yet!"
+    fi
+    echo
+    # Only return to the menu when the user is ready
+    read -e -p "Input any character when you are ready to be sent back to the menu. " TEMP
 }
 
 
@@ -91,10 +209,10 @@ function list_listening_ports()
         printf "\tThe application ${GREEN}"${APPLICATION}"${WHITE} is binded to ${GREEN}"${IP}"${WHITE} to listen on port ${GREEN}${PORT}${WHITE}.\n"
         printf "\tThe Process ID (PID) of the ${GREEN}"${APPLICATION}"${WHITE} process is ${GREEN}"${PID}"${WHITE}.\n"
         printf "\tThe protocol being used here is ${GREEN}"${PROTOCOL}"${WHITE}. The associated user is ${GREEN}"${USER}"${WHITE}.\n"
-        echo
+        echo 
     done
     # Keep the data up in the terminal until the user is ready to go back to the menu
-    read -e -p "Input any character when you are ready to be send back to the menu. " TEMP
+    read -e -p "Input any character when you are ready to be sent back to the menu. " TEMP
 }
 
 
@@ -191,6 +309,7 @@ function disable_user()
     fi
 }
 
+# A function that parses through log files for suspicious activity
 function parse_logs()
 {
     clear
@@ -201,6 +320,7 @@ function parse_logs()
     echo
     echo "Retrieving logs..."
     sudo grep "authentication failure" /var/log/auth.log | grep -v "grep" > temp.txt
+    tail -10 temp.txt > temp2.txt
     while read LINE; do
         MONTH=("$(echo $LINE | awk '{print $1}')")
         DAY=("$(echo $LINE | awk '{print $2}')")
@@ -210,10 +330,10 @@ function parse_logs()
         USER=("$(echo $LINE | awk '{print $15}' | awk -F'[=]' '{print $2}')")
         printf "\tOn ${GREEN}"${MONTH}" "${DAY}"${WHITE} at ${GREEN}"${TIME}"${WHITE}, there was an ${RED}authentication failure${WHITE} (found in /var/log/auth.log).\n"
         printf "\tThe associated command is ${GREEN}"${COMMAND}"${WHITE}. The ruser was ${GREEN}"${RUSER}"${WHITE} and the user was ${GREEN}"${USER}"${WHITE}.\n\n"
-    done < temp.txt
+    done < temp2.txt
     if [ ! -s temp.txt ]
     then
-        cat temp.txt
+        cat temp2.txt
         printf "\tNo ${RED}authentication failure${WHITE} logs were found in /var/log/auth.log.\n\n"
     fi
     # =========================================================
@@ -226,10 +346,11 @@ function parse_logs()
     # Printing "opened" SSH logs
     sudo grep "ssh" /var/log/auth.log | grep "opened" | grep -v "grep"
     sudo grep "ssh" /var/log/auth.log | grep "opened" | grep -v "grep" > temp.txt
+    tail -10 temp.txt > temp2.txt
     # If there are no "opened" logs, tell the user
-    if [ ! -s temp.txt ]
+    if [ ! -s temp2.txt ]
     then
-        cat temp.txt
+        cat temp2.txt
         printf "\tNo ${RED}SSH \"opened\"${WHITE} logs were found in /var/log/auth.log.\n\n"
     fi
     echo    
@@ -237,18 +358,21 @@ function parse_logs()
     # Printing "closed" SSH logs
     sudo grep "ssh" /var/log/auth.log | grep "closed" | grep -v "grep"
     sudo grep "ssh" /var/log/auth.log | grep "closed" | grep -v "grep" > temp.txt
+    tail -10 temp.txt > temp2.txt
     # If there are no "closed" logs, tell the user
-    if [ ! -s temp.txt ]
+    if [ ! -s temp2.txt ]
     then
-        cat temp.txt
+        cat temp2.txt
         printf "\tNo ${RED}SSH \"closed\"${WHITE} logs were found in /var/log/auth.log.\n\n"
     fi
     rm temp.txt
+    rm temp2.txt
     echo
     # Keep the information up until the user chooses to return to the menu
     read -e -p "Enter any key to return to the menu. " TEMP
 }
 
+# A function that lists all of the actively running services
 function list_running_services()
 {
     clear
@@ -266,6 +390,7 @@ function list_running_services()
     fi
 }
 
+# A function that lists the dependencies of an input process
 function list_process_dependencies()
 {
     clear
@@ -281,6 +406,18 @@ function list_process_dependencies()
     systemctl list-dependencies $PROC_NAME
     echo
     read -e -p "Enter any key to return to the menu. " TEMP
+}
+
+function crontab_check()
+{
+    cat /etc/passwd | awk -F":" '{ print $1 }' > login_usernames_temp.txt
+    while read USER; do
+        sudo su $USER 2> /dev/null
+        echo -e ${GREEN}$USER${WHITE}
+        sudo crontab -l | grep -v "no crontab for ${USER}"
+        exit
+    done < login_usernames_temp.txt
+    rm login_usernames_temp.txt
 }
 
 # Print an exit message to the user
@@ -321,9 +458,26 @@ do
     elif [ "$MENU_INPUT" == 7 ]
     then
         parse_logs
+    # Option for if the user wishes to list running services
     elif [ "$MENU_INPUT" == 8 ]
     then
         list_running_services
+    # Option to set the permissions for a file of choice
+    elif [ "$MENU_INPUT" == 9 ]
+    then
+        file_permissions_setter
+    # Option to quarantine a file of choice
+    elif [ "$MENU_INPUT" == 10 ]
+    then
+        file_quarantine
+    # Option to list the files in quarantine
+    elif [ "$MENU_INPUT" == 11 ]
+    then
+        list_file_quarantine
+    # Option to list the files in quarantine
+    elif [ "$MENU_INPUT" == 12 ]
+    then
+        crontab_check
     # Let the user know if their input is invalid
     elif [ "$MENU_INPUT" != 'q' ] && [ "$MENU_INPUT" != 'Q' ]
     then
@@ -333,17 +487,24 @@ do
     fi
 done
 
-# RESET SCORING PORT
-# CHECK FOR CRON JOBS
-# CHECK FOR AUTORUNS
+# ==== ADD TO RECURRING PLAN ====
+    # RESET SCORING PORT
+        # sudo fuser -k $PORT/tcp
+    # CHECK FOR CRON JOBS (check for each user)
+    # CHECK FOR AUTORUNS
+    # ADD MSORE TO LOGS
+    # filtering for tcp dump!
+    #!!! SSH key nuke <-- run python script (removes ssh keys from every user directory)
+    
+
 # CHANGE NAMES OF NEEDED EXES
 
 # ==== ADD TO 5 MINUTE PLAN ====
-# Disable PAM in the SSH config
 # Enable one user for SSH, disable / block the rest
+# Disable root login for ssh
 # Harden SSH config
+# Cat /etc/host
 # Harden crontab;; view with crontab -e
 	# ss //tcp socket connections ; ps //calls up info on processes
-# Changing BIOS password
 
 exit_message
