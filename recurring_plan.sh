@@ -28,7 +28,9 @@ function print_menu()
     printf "\t3 - Check if the ${YELLOW}scoring port${WHITE} is listening\n"
     printf "\t4 - EDIT\n"
     printf "\t5 - List ${YELLOW}all${WHITE} currently enabled users\n"
-    printf "\t6 - Disable a ${YELLOW}user of choice${WHITE}\n\n"
+    printf "\t6 - Disable a ${YELLOW}user of choice${WHITE}\n"
+    printf "\t7 - List potentially suspicious ${YELLOW}log information${WHITE}\n"
+    printf "\t8 - List ${YELLOW}running processes${WHITE} and pick one to ${YELLOW}inspect${WHITE}\n\n"
     read -e -p "Choose an option from the menu (1-6) or enter q/Q to quit: " MENU_INPUT
     # Prompting the user for input
 
@@ -189,6 +191,98 @@ function disable_user()
     fi
 }
 
+function parse_logs()
+{
+    clear
+    # =========================================================
+    # ============== authentication failure logs ==============
+    # =========================================================
+    printf "\t========= ${GREEN}Authentication Failure Data Logs${WHITE} =========\n"
+    echo
+    echo "Retrieving logs..."
+    sudo grep "authentication failure" /var/log/auth.log | grep -v "grep" > temp.txt
+    while read LINE; do
+        MONTH=("$(echo $LINE | awk '{print $1}')")
+        DAY=("$(echo $LINE | awk '{print $2}')")
+        TIME=("$(echo $LINE | awk '{print $3}')")
+        COMMAND=("$(echo $LINE | awk '{print $5}' | awk -F'[:]' '{print $1}')")
+        RUSER=("$(echo $LINE | awk '{print $13}' | awk -F'[=]' '{print $2}')")
+        USER=("$(echo $LINE | awk '{print $15}' | awk -F'[=]' '{print $2}')")
+        printf "\tOn ${GREEN}"${MONTH}" "${DAY}"${WHITE} at ${GREEN}"${TIME}"${WHITE}, there was an ${RED}authentication failure${WHITE} (found in /var/log/auth.log).\n"
+        printf "\tThe associated command is ${GREEN}"${COMMAND}"${WHITE}. The ruser was ${GREEN}"${RUSER}"${WHITE} and the user was ${GREEN}"${USER}"${WHITE}.\n\n"
+    done < temp.txt
+    if [ ! -s temp.txt ]
+    then
+        cat temp.txt
+        printf "\tNo ${RED}authentication failure${WHITE} logs were found in /var/log/auth.log.\n\n"
+    fi
+    # =========================================================
+    # ================ SSH opened / closed logs ================
+    # =========================================================
+    # Printing a header
+    printf "\t========= ${GREEN}SSH \"opened\" and \"closed\" Logs${WHITE} =========\n"
+    echo
+    echo -e "${GREEN}Retrieving \"opened\" SSH logs...${WHITE}"
+    # Printing "opened" SSH logs
+    sudo grep "ssh" /var/log/auth.log | grep "opened" | grep -v "grep"
+    sudo grep "ssh" /var/log/auth.log | grep "opened" | grep -v "grep" > temp.txt
+    # If there are no "opened" logs, tell the user
+    if [ ! -s temp.txt ]
+    then
+        cat temp.txt
+        printf "\tNo ${RED}SSH \"opened\"${WHITE} logs were found in /var/log/auth.log.\n\n"
+    fi
+    echo    
+    echo -e "${GREEN}Retrieving \"closed\" SSH logs...${WHITE}"
+    # Printing "closed" SSH logs
+    sudo grep "ssh" /var/log/auth.log | grep "closed" | grep -v "grep"
+    sudo grep "ssh" /var/log/auth.log | grep "closed" | grep -v "grep" > temp.txt
+    # If there are no "closed" logs, tell the user
+    if [ ! -s temp.txt ]
+    then
+        cat temp.txt
+        printf "\tNo ${RED}SSH \"closed\"${WHITE} logs were found in /var/log/auth.log.\n\n"
+    fi
+    rm temp.txt
+    echo
+    # Keep the information up until the user chooses to return to the menu
+    read -e -p "Enter any key to return to the menu. " TEMP
+}
+
+function list_running_services()
+{
+    clear
+    systemctl list-units --type=service --state=running | grep running > temp.txt
+    COUNT=0
+    while read LINE; do
+        COUNT=$((COUNT + 1))
+        printf "\t${GREEN}(${COUNT})${WHITE} ${LINE}\n"
+    done < temp.txt
+    rm temp.txt
+    echo
+    read -e -p "Enter a number (1-${COUNT}) to get more information on that process, or any other key to return to the menu. " TEMP
+    if [ $COUNT -gt "$TEMP" ] || [ "$TEMP" == $COUNT ]; then
+        list_process_dependencies $TEMP
+    fi
+}
+
+function list_process_dependencies()
+{
+    clear
+    systemctl list-units --type=service --state=running | grep running > temp.txt
+    COUNT=0
+    while read LINE; do
+        COUNT=$((COUNT + 1))
+        if [ $1 == $COUNT ]; then
+            PROC_NAME=("$(echo $LINE | awk '{print $1}')")
+        fi
+    done < temp.txt
+    rm temp.txt
+    systemctl list-dependencies $PROC_NAME
+    echo
+    read -e -p "Enter any key to return to the menu. " TEMP
+}
+
 # Print an exit message to the user
 function exit_message()
 {
@@ -223,6 +317,14 @@ do
     elif [ "$MENU_INPUT" == 6 ]
     then
         disable_user
+    # Option 7 parses for suspicious activity in log files
+    elif [ "$MENU_INPUT" == 7 ]
+    then
+        parse_logs
+    elif [ "$MENU_INPUT" == 8 ]
+    then
+        list_running_services
+    # Let the user know if their input is invalid
     elif [ "$MENU_INPUT" != 'q' ] && [ "$MENU_INPUT" != 'Q' ]
     then
         echo
@@ -242,5 +344,6 @@ done
 # Harden SSH config
 # Harden crontab;; view with crontab -e
 	# ss //tcp socket connections ; ps //calls up info on processes
+# Changing BIOS password
 
 exit_message
