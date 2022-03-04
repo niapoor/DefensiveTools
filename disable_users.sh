@@ -41,11 +41,10 @@ function disable_users()
     # Grabs the username of every enabled user
     cat /etc/passwd | awk -F":" '{ print $1 }' > login_usernames_temp.txt
 
-    # A user should be set to be disabled by default
-    DISABLE=true
-
     # Loop through all the enabled users
     while read LINE; do
+        # A user should be set to be disabled by default
+        DISABLE=true
         # Set the user to the current line
         USER=$(echo $LINE)
         # Loop through the whitelist
@@ -53,21 +52,20 @@ function disable_users()
             # If the user is in the whitelist, don't disable them!
             if [ $USER = $VALUE ]; then
                 DISABLE=false
-            break
-        fi
+                break
+            fi
         done
 
     # Only disable the user if they have shown not to be on the whitelist
         if [ $DISABLE = true ]; then  
-        # Lock the user
+            # Lock the user
             sudo usermod -L $USER
-        sudo passwd -l $USER
-        # Expires the user
+            sudo passwd -l $USER
+            # Expires the user
             sudo chage -E0 $USER
-        # Change the user's shell to nologin
+            # Change the user's shell to nologin
             sudo usermod -s /sbin/nologin $USER
         fi
-    
     done < login_usernames_temp.txt
     # Remove the text file of usernames
     rm login_usernames_temp.txt
