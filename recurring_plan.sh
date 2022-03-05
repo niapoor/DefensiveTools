@@ -9,7 +9,7 @@ WHITE='\033[0m'
 MENU_INPUT=0
 
 # Variables to edit based off of the competition topology
-SCORING_PORT=631
+SCORING_PORTS=(22 123 3306 8080 80)
 
 # A function that prints a message of all options to the user
 function print_menu()
@@ -25,18 +25,17 @@ function print_menu()
     printf "\nEnter Selection:\n"
     printf "\t1  - List ${YELLOW}all ports${WHITE} that are currently listening\n"
     printf "\t2  - Check if a ${YELLOW}specific port${WHITE} is listening\n"
-    printf "\t3  - Check if the ${YELLOW}scoring port${WHITE} is listening\n"
-    printf "\t4  - EDIT\n"
-    printf "\t5  - List ${YELLOW}all${WHITE} currently enabled users\n"
-    printf "\t6  - Disable a ${YELLOW}user of choice${WHITE}\n"
-    printf "\t7  - List potentially suspicious ${YELLOW}log information${WHITE}\n"
-    printf "\t8  - List ${YELLOW}running processes${WHITE} and pick one to ${YELLOW}inspect${WHITE}\n"
-    printf "\t9  - Change the permissions of an input ${YELLOW}file${WHITE}\n"
-    printf "\t10 - ${YELLOW}Quarantine${WHITE} a file of choice\n"
-    printf "\t11 - Print the list of ${YELLOW}quarantined file paths${WHITE}\n"
-    printf "\t12 - List all services that run ${YELLOW}on startup${WHITE} and ${YELLOW}list the dependencies of one${WHITE}\n"
-    printf "\t13 - ${YELLOW}Disable${WHITE} one service that ${YELLOW}runs on startup${WHITE} (lists them as well)\n"
-    printf "\t14 - ${YELLOW}Create a user${WHITE} without a password\n\n"
+    printf "\t3  - Check if the ${YELLOW}scoring ports${WHITE} are listening\n"
+    printf "\t4  - List ${YELLOW}all${WHITE} currently enabled users\n"
+    printf "\t5  - Disable a ${YELLOW}user of choice${WHITE}\n"
+    printf "\t6  - List potentially suspicious ${YELLOW}log information${WHITE}\n"
+    printf "\t7  - List ${YELLOW}running processes${WHITE} and pick one to ${YELLOW}inspect${WHITE}\n"
+    printf "\t8  - Change the permissions of an input ${YELLOW}file${WHITE}\n"
+    printf "\t9  - ${YELLOW}Quarantine${WHITE} a file of choice\n"
+    printf "\t10 - Print the list of ${YELLOW}quarantined file paths${WHITE}\n"
+    printf "\t11 - List all services that run ${YELLOW}on startup${WHITE} and ${YELLOW}list the dependencies of one${WHITE}\n"
+    printf "\t12 - ${YELLOW}Disable${WHITE} one service that ${YELLOW}runs on startup${WHITE} (lists them as well)\n"
+    printf "\t13 - ${YELLOW}Create a user${WHITE} without a password\n\n"
     read -e -p "Choose an option from the menu (1-6) or enter q/Q to quit: " MENU_INPUT
     # Prompting the user for input
 
@@ -220,46 +219,43 @@ function list_listening_ports()
 
 
 # A function that checks if the scoring port is listening, and alerts the user if it is not.
-function check_scoring_port_listening()
+function check_scoring_ports_listening()
 {
     clear
     # Printing a header
     echo
-    printf "\t===== ${GREEN}Listing Listening Data on Scoring Port ("${SCORING_PORT}")${WHITE} =====\n"
+    printf "\t===== ${GREEN}Listing Listening Data on Scoring Ports ("${SCORING_PORTS}")${WHITE} =====\n"
     echo
     echo "Listening Port Data..."
     echo
     # Read in data for the scoring port
-    LINES=("$(sudo lsof -Pi :$SCORING_PORT -sTCP:LISTEN | tail -n +2)")
-    if [ "$LINES" = '' ]
-    then
-        printf "\tThe scoring port (port ${SCORING_PORT}) is ${RED}not listening${WHITE}.\n"
-        echo
-    fi
-    # Deliminate the data by new line characters
-    IFS=$'\n'
-    # Read through the lines of data regarding the scoring port
-    for LINE in $LINES; do
-        # Extract port, IP, application, PID, and protocol information for each line of data
-        PORT=("$(echo $LINE | awk '{print $9}' | awk -F'[:]' '{print $NF}')")
-        IP=("$(echo $LINE | awk '{print $9}' | awk -F'[:]' '{print $1}')")
-        APPLICATION=("$(echo $LINE | awk '{print $1}')")
-        PID=("$(echo $LINE | awk '{print $2}')")
-        PROTOCOL=("$(echo $LINE | awk '{print $8}')")
-        USER=("$(echo $LINE | awk '{print $3}')")
-        # Print the formatted data to the user
-        printf "\tThe application ${GREEN}"${APPLICATION}"${WHITE} is binded to ${GREEN}"${IP}"${WHITE} to listen on port ${GREEN}${PORT}${WHITE}.\n"
-        printf "\tThe Process ID (PID) of the ${GREEN}"${APPLICATION}"${WHITE} process is ${GREEN}"${PID}"${WHITE}.\n"
-        printf "\tThe protocol being used here is ${GREEN}"${PROTOCOL}"${WHITE}. The associated user is ${GREEN}"${USER}"${WHITE}.\n"
-        echo
+    for SCORING_PORT in ${SCORING_PORTS[@]}; do
+        LINES=("$(sudo lsof -Pi :$SCORING_PORT -sTCP:LISTEN | tail -n +2)")
+        if [ "$LINES" = '' ]
+        then
+            printf "\tThe scoring port ${SCORING_PORT} is ${RED}not listening${WHITE}.\n"
+            echo
+        fi
+        # Deliminate the data by new line characters
+        IFS=$'\n'
+        # Read through the lines of data regarding the scoring port
+        for LINE in $LINES; do
+            # Extract port, IP, application, PID, and protocol information for each line of data
+            PORT=("$(echo $LINE | awk '{print $9}' | awk -F'[:]' '{print $NF}')")
+            IP=("$(echo $LINE | awk '{print $9}' | awk -F'[:]' '{print $1}')")
+            APPLICATION=("$(echo $LINE | awk '{print $1}')")
+            PID=("$(echo $LINE | awk '{print $2}')")
+            PROTOCOL=("$(echo $LINE | awk '{print $8}')")
+            USER=("$(echo $LINE | awk '{print $3}')")
+     	    # Print the formatted data to the user
+            printf "\tThe application ${GREEN}"${APPLICATION}"${WHITE} is binded to ${GREEN}"${IP}"${WHITE} to listen on port ${GREEN}${PORT}${WHITE}.\n"
+            printf "\tThe Process ID (PID) of the ${GREEN}"${APPLICATION}"${WHITE} process is ${GREEN}"${PID}"${WHITE}.\n"
+            printf "\tThe protocol being used here is ${GREEN}"${PROTOCOL}"${WHITE}. The associated user is ${GREEN}"${USER}"${WHITE}.\n"
+            echo
+        done
     done
-    # Prompting the user to clear the scoring port of all non-essential listening services
-    read -e -p "Input 4 to reset the scoring port (port ${SCORING_PORT}), or any other input to go return to the menu: " TEMP
-    # If the user chose to reset the scoring port, do so
-    if [ "$TEMP" == 4 ]
-    then
-        read -e -p "TEST" TEMP
-    fi
+    # Don't exit until the user is ready
+    read -e -p "Enter any key to return to the menu. " TEMP
 }
 
 function list_enabled_users()
@@ -555,48 +551,45 @@ do
     # Option 3 lists all listening data on the SCORING port
     elif [ "$MENU_INPUT" == 3 ]
     then
-        check_scoring_port_listening
+        check_scoring_ports_listening
+    # Option 4 lists all enabled users
     elif [ "$MENU_INPUT" == 4 ]
     then
-        echo "EDIT"
-    # Option 5 lists all enabled users
+        list_enabled_users
+    # Option 5 disables a single user of choice
     elif [ "$MENU_INPUT" == 5 ]
     then
-        list_enabled_users
-    # Option 6 disables a single user of choice
-    elif [ "$MENU_INPUT" == 6 ]
-    then
         disable_user
-    # Option 7 parses for suspicious activity in log files
-    elif [ "$MENU_INPUT" == 7 ]
+    # Option 6 parses for suspicious activity in log files
+    elif [ "$MENU_INPUT" == 6 ]
     then
         parse_logs
     # Option for if the user wishes to list running services
-    elif [ "$MENU_INPUT" == 8 ]
+    elif [ "$MENU_INPUT" == 7 ]
     then
         list_running_services
     # Option to set the permissions for a file of choice
-    elif [ "$MENU_INPUT" == 9 ]
+    elif [ "$MENU_INPUT" == 8 ]
     then
         file_permissions_setter
     # Option to quarantine a file of choice
-    elif [ "$MENU_INPUT" == 10 ]
+    elif [ "$MENU_INPUT" == 9 ]
     then
         file_quarantine
     # Option to list the files in quarantine
-    elif [ "$MENU_INPUT" == 11 ]
+    elif [ "$MENU_INPUT" == 10 ]
     then
         list_file_quarantine
     # Option to list the files in quarantine
-    elif [ "$MENU_INPUT" == 12 ]
+    elif [ "$MENU_INPUT" == 11 ]
     then
         list_startup_services
     # Option to disable a service that starts on startup
-    elif [ "$MENU_INPUT" == 13 ]
+    elif [ "$MENU_INPUT" == 12 ]
     then
         disable_startup_service
     # Option to create a new user (NO PASSWORD, it could show up in bash logs)
-    elif [ "$MENU_INPUT" == 14 ]
+    elif [ "$MENU_INPUT" == 13 ]
     then
         create_user
     # Let the user know if their input is invalid
