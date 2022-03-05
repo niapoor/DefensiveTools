@@ -1,4 +1,6 @@
 #!/bin/bash
+# Nia Poor
+# Last Updated 03/04/2022
 
 # Variables that hold the codes to color the terminal
 GREEN='\033[0;92m'
