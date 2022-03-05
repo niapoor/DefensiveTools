@@ -33,7 +33,9 @@ function print_menu()
     printf "\t8  - List ${YELLOW}running processes${WHITE} and pick one to ${YELLOW}inspect${WHITE}\n"
     printf "\t9  - Change the permissions of an input ${YELLOW}file${WHITE}\n"
     printf "\t10 - ${YELLOW}Quarantine${WHITE} a file of choice\n"
-    printf "\t11 - Print the list of ${YELLOW}quarantined file paths${WHITE}\n\n"
+    printf "\t11 - Print the list of ${YELLOW}quarantined file paths${WHITE}\n"
+    printf "\t12 - List all services that run ${YELLOW}on startup${WHITE} and ${YELLOW}list the dependencies of one${WHITE}\n"
+    printf "\t13 - ${YELLOW}Disable${WHITE} one service that ${YELLOW}runs on startup${WHITE} (lists them as well)\n\n"
     read -e -p "Choose an option from the menu (1-6) or enter q/Q to quit: " MENU_INPUT
     # Prompting the user for input
 
@@ -408,6 +410,8 @@ function list_process_dependencies()
     read -e -p "Enter any key to return to the menu. " TEMP
 }
 
+
+# THIS FUNCTION IS NOT IMPLEMENTED
 function crontab_check()
 {
     cat /etc/passwd | awk -F":" '{ print $1 }' > login_usernames_temp.txt
@@ -418,6 +422,75 @@ function crontab_check()
         exit
     done < login_usernames_temp.txt
     rm login_usernames_temp.txt
+}
+
+
+# A function that lists all services that run upon startup
+function list_startup_services()
+{
+    clear
+    # Header
+    printf "\t===== ${GREEN}List of Startup Services${WHITE} =====\n\n"
+    # Listing the services
+    ls /etc/init.d
+    echo
+    read -e -p "Enter one of the listed service names to list dependencies or any other input to return to the menu. " SERVICE_NAME
+    # Save the services to a file and loop through the lines
+    ls /etc/init.d > services.txt
+    EXISTS=false
+    while read LINE; do
+        # If the input service 
+        if [ "$SERVICE_NAME" = "$LINE" ]; then
+            EXISTS=true
+            sudo systemctl list-dependencies $SERVICE_NAME --reverse
+            sudo rm services.txt
+            echo
+            # Don't exit until the user is ready
+            read -e -p "Enter any key to return to the menu. " TEMP
+            break
+        fi
+    done < services.txt
+    if [ "$EXISTS" = false ]; then
+        # If this point was reached the service was not listed
+        echo -e "${RED}Service not listed.${WHITE}"
+    fi
+    echo
+    # Don't exit until the user is ready
+    read -e -p "Enter any key to return to the menu. " TEMP
+}
+
+# A function that disables a service that runs on startup
+function disable_startup_service()
+{
+    clear
+    # Header
+    printf "\t===== ${GREEN}List of Startup Services${WHITE} =====\n\n"
+    # Listing the services
+    ls /etc/init.d
+    echo
+    read -e -p "Enter one of the listed service names to disable or any other input to return to the menu. " SERVICE_NAME
+    # Save the services to a file and loop through the lines
+    ls /etc/init.d > services.txt
+    EXISTS=false
+    while read LINE; do
+        # If the input service 
+        if [ "$SERVICE_NAME" = "$LINE" ]; then
+            EXISTS=true
+            sudo systemctl disable $SERVICE_NAME --now
+            sudo rm services.txt
+            echo
+            # Don't exit until the user is ready
+            read -e -p "Enter any key to return to the menu. " TEMP
+            break
+        fi
+    done < services.txt
+    if [ "$EXISTS" = false ]; then
+        # If this point was reached the service was not listed
+        echo -e "${RED}Service not listed.${WHITE}"
+    fi
+    echo
+    # Don't exit until the user is ready
+    read -e -p "Enter any key to return to the menu. " TEMP
 }
 
 # Print an exit message to the user
@@ -477,7 +550,10 @@ do
     # Option to list the files in quarantine
     elif [ "$MENU_INPUT" == 12 ]
     then
-        crontab_check
+        list_startup_services
+    elif [ "$MENU_INPUT" == 13 ]
+    then
+        disable_startup_service
     # Let the user know if their input is invalid
     elif [ "$MENU_INPUT" != 'q' ] && [ "$MENU_INPUT" != 'Q' ]
     then
@@ -492,10 +568,16 @@ done
         # sudo fuser -k $PORT/tcp
     # CHECK FOR CRON JOBS (check for each user)
     # CHECK FOR AUTORUNS
-    # ADD MSORE TO LOGS
+    # ADD MORE TO LOGS
     # filtering for tcp dump!
     #!!! SSH key nuke <-- run python script (removes ssh keys from every user directory)
+
+# RESET SCORING PORT <-- deleting all connected services
+    # sudo fuser -k $PORT/tcp
     
+# DISABLE A SERVICE: <-- ones that run on startup
+    # DISABLE A SERVICE
+    # sudo systemctl disable NAME_OF_SERVICE --now    
 
 # CHANGE NAMES OF NEEDED EXES
 
