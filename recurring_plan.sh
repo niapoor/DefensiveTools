@@ -35,7 +35,8 @@ function print_menu()
     printf "\t10 - ${YELLOW}Quarantine${WHITE} a file of choice\n"
     printf "\t11 - Print the list of ${YELLOW}quarantined file paths${WHITE}\n"
     printf "\t12 - List all services that run ${YELLOW}on startup${WHITE} and ${YELLOW}list the dependencies of one${WHITE}\n"
-    printf "\t13 - ${YELLOW}Disable${WHITE} one service that ${YELLOW}runs on startup${WHITE} (lists them as well)\n\n"
+    printf "\t13 - ${YELLOW}Disable${WHITE} one service that ${YELLOW}runs on startup${WHITE} (lists them as well)\n"
+    printf "\t14 - ${YELLOW}Create a user${WHITE} without a password\n\n"
     read -e -p "Choose an option from the menu (1-6) or enter q/Q to quit: " MENU_INPUT
     # Prompting the user for input
 
@@ -493,6 +494,45 @@ function disable_startup_service()
     read -e -p "Enter any key to return to the menu. " TEMP
 }
 
+# A function that allows you to create a single user with sudo privileges
+function create_user()
+{
+    # Clear the terminal and prompt the user for a username to create
+    clear
+    read -e -p "Enter the username of the user to create (cannot already exist): " USER
+    echo
+    # Store the usernames of all existing users
+    cat /etc/passwd | awk -F":" '{print $1}' > login_usernames_temp.txt
+    CREATE=true
+    # Determing if a user with the input username already exists
+    while read CURRENT_USER; do
+        if [ "$USER" = "$CURRENT_USER" ]; then
+            CREATE=false
+        fi
+    done < login_usernames_temp.txt
+    # If the user does not exist, create it!
+    if [ $CREATE = true ]; then
+        # Create a home directory
+        sudo mkdir -p /home/${USER}
+        # Create a user with the above home directory and the shell /bin/bash
+        sudo useradd -m -d /home/${USER} -s /bin/bash ${USER} &>/dev/null
+        # The new user should own their home directory
+        sudo chown -R ${USER}:${USER} /home/${USER}
+        # The new user will have no password, as it can be seen in the git logs
+        sudo passwd -d $USER
+        # The new user should have sudo privileges
+        sudo usermod -aG sudo ${USER}
+        # Print to the terminal that the new user was created!
+        echo -e "New user ${USER} created ${GREEN}successfully${WHITE}!"
+    # If a user with the input username exists, print that
+    else
+        echo -e "A user with the input username ${RED}already exists${WHITE}."
+    fi
+    echo
+    # Don't leave until the user is ready
+    read -e -p "Enter any key to return to the menu. " TEMP
+}
+
 # Print an exit message to the user
 function exit_message()
 {
@@ -551,9 +591,14 @@ do
     elif [ "$MENU_INPUT" == 12 ]
     then
         list_startup_services
+    # Option to disable a service that starts on startup
     elif [ "$MENU_INPUT" == 13 ]
     then
         disable_startup_service
+    # Option to create a new user (NO PASSWORD, it could show up in bash logs)
+    elif [ "$MENU_INPUT" == 14 ]
+    then
+        create_user
     # Let the user know if their input is invalid
     elif [ "$MENU_INPUT" != 'q' ] && [ "$MENU_INPUT" != 'Q' ]
     then
@@ -573,11 +618,7 @@ done
     #!!! SSH key nuke <-- run python script (removes ssh keys from every user directory)
 
 # RESET SCORING PORT <-- deleting all connected services
-    # sudo fuser -k $PORT/tcp
-    
-# DISABLE A SERVICE: <-- ones that run on startup
-    # DISABLE A SERVICE
-    # sudo systemctl disable NAME_OF_SERVICE --now    
+    # sudo fuser -k $PORT/tcp  
 
 # CHANGE NAMES OF NEEDED EXES
 
