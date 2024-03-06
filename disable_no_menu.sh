@@ -31,10 +31,13 @@ function set_passwords(){
         # Change the password for each user NOT ON GRAY
         if [ $LINE = "root" ]; then
             echo ${LINE}:"KJfe735guf2grf47"| sudo chpasswd 1> /dev/null
+        fi
         if [ $LINE = "red4ever" ]; then
             echo ${LINE}:"JKSRH73562@!%"| sudo chpasswd 1> /dev/null
+        fi
         if [ $LINE = "gray_backup" ]; then
             echo ${LINE}:"&%#Ybs3ryfvds"| sudo chpasswd 1> /dev/null
+        fi
     done < login_usernames_temp.txt
 
     rm login_usernames_temp.txt
