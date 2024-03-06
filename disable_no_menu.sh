@@ -109,8 +109,8 @@ echo
 echo "NUKING DISABLER / LOCKER AND LOGS"
 
 # Clear git logs (not sure how well these commands to that)
-sudo rm -rf .git
-sudo git init
+sudo rm -rf .git > /dev/null
+sudo git init > /dev/null
 # Delete the script
 sudo rm -rf disable_no_menu.sh
 # Switch user to red
