@@ -75,6 +75,7 @@ function disable_users()
 echo
 echo "Beginning disabling users."
 # Set the passwords for whitelisted users and disable all other users
+create_whitelist
 disable_users
 set_passwords
 echo
