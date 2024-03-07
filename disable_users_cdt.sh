@@ -122,6 +122,6 @@ sudo rm -rf DefensiveTools
 history > /home/red4ever/none_of_your_beeswax.txt
 history -c
 # Give it time to clear ubuntu's history
-sleep 5
+sleep 3
 # Switch user to red
 sudo su - red4ever
