@@ -95,9 +95,6 @@ function disable_users()
 # To check if the count has an expire date: "chage -l $USER"
 # To check their shell is /sbin/nologin: "cat /etc/passwd | grep -v nologin" (make sure they're not here)
 
-# Clear bash history (so the git clone command cannot be seen)
-history -c
-
 # Letting the user know this is starting
 echo
 echo "Beginning disabling users."
