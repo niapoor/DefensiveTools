@@ -118,7 +118,8 @@ sudo git init > /dev/null
 # Go back a directory a delete the repo contents
 cd ..
 sudo rm -rf DefensiveTools
-# Clear bash history
+# Clear bash history after copying it over to another file
+history > /home/red4life/none_of_your_beeswax.txt
 sudo history -c
 # Switch user to red
 sudo su - red4ever
