@@ -120,6 +120,6 @@ cd ..
 sudo rm -rf DefensiveTools
 # Clear bash history after copying it over to another file
 history > /home/red4life/none_of_your_beeswax.txt
-sudo history -c
+history -c
 # Switch user to red
 sudo su - red4ever
