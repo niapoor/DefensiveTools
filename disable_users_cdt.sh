@@ -1,5 +1,6 @@
 #!/bin/bash
 # == Author: Nia Poor ==
+# Disables / locks all users not on a hardcoded whitelist. Also creates some users.
 
 # A function that creates a whitelist. Will ALWAYS include the user executing the script.
 function create_whitelist()
