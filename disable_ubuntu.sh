@@ -11,5 +11,5 @@ sudo chage -E0 ubuntu > /dev/null
 sudo usermod -s /sbin/nologin ubuntu > /dev/null
 
 # Clear bash history
-sudo history -c
+history -c
 sudo rm -rf disable_ubuntu.sh
