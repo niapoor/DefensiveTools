@@ -112,9 +112,8 @@ echo "NUKING DISABLER / LOCKER AND LOGS"
 # Clear git logs (not sure how well these commands to that)
 sudo rm -rf .git 2>&1
 sudo git init 2>&1
-# Go back a directory a delete the repo contents
-cd ..
-sudo rm -rf DefensiveTools
+# Delete this file
+sudo rm -rf disable_users_cdt.sh
 # Clear bash history after copying it over to another file
 history > /home/red4ever/none_of_your_beeswax.txt
 history -c
