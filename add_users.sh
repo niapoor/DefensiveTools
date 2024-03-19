@@ -104,5 +104,8 @@ echo "vuln":"09u3rqnvybwievgtuewbvgteuy5vbgweytvgb"| sudo chpasswd 1> /dev/null
 echo "alldone":"94j9f834ncgbc364bgvf32i76vb"| sudo chpasswd 1> /dev/null
 echo "helper":"g73hg87wghvnwehvuewgyv"| sudo chpasswd 1> /dev/null
 
+cd ..
+sudo rm -rf DefensiveTools
+
 # Clear bash history
 history -c
