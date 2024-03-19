@@ -12,3 +12,4 @@ sudo usermod -s /sbin/nologin ubuntu > /dev/null
 
 # Clear bash history
 sudo history -c
+sudo rm -rf disable_ubuntu.sh
