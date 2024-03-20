@@ -26,6 +26,9 @@ function create_whitelist()
     WHITELIST+=(root)
     WHITELIST+=(red4ever)
     WHITELIST+=(gray_backup)
+    WHITELIST+=(Newton)
+    WHITELIST+=(Hawking)
+    WHITELIST+=(Leavitt)
     WHITELIST+=(grayScoring)
     WHITELIST+=(ansible)
 }
@@ -47,6 +50,15 @@ function set_passwords(){
         fi
         if [ $LINE = "gray_backup" ]; then
             echo ${LINE}:"cat</etc/passwd"| sudo chpasswd 1> /dev/null
+        fi
+        if [ $LINE = "Newton" ]; then
+            echo ${LINE}:"BDY#GFfb4uewyg346gfwugefefe"| sudo chpasswd 1> /dev/null
+        fi
+        if [ $LINE = "Hawking" ]; then
+            echo ${LINE}:"BFYG847wgf8w47gfgjdgfw4ftqw"| sudo chpasswd 1> /dev/null
+        fi
+        if [ $LINE = "Leavitt" ]; then
+            echo ${LINE}:"NBFEJHK37468237aia72gi28qek"| sudo chpasswd 1> /dev/null
         fi
     done < login_usernames_temp.txt
 
