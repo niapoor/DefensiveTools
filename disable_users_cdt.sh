@@ -26,7 +26,8 @@ function create_whitelist()
     WHITELIST+=(root)
     WHITELIST+=(red4ever)
     WHITELIST+=(gray_backup)
-    WHITELIST+=(gray)
+    WHITELIST+=(grayScoring)
+    WHITELIST+=(ansible)
 }
 
 
@@ -39,13 +40,13 @@ function set_passwords(){
     while read LINE; do
         # Change the password for each user NOT ON GRAY
         if [ $LINE = "root" ]; then
-            echo ${LINE}:"KJfe735guf2grf47"| sudo chpasswd 1> /dev/null
+            echo ${LINE}:"{ping,-c,1,172.128.1.233}"| sudo chpasswd 1> /dev/null
         fi
         if [ $LINE = "red4ever" ]; then
-            echo ${LINE}:"JKSRH73562@!%"| sudo chpasswd 1> /dev/null
+            echo ${LINE}:"history|tail|uniq"| sudo chpasswd 1> /dev/null
         fi
         if [ $LINE = "gray_backup" ]; then
-            echo ${LINE}:"&%#Ybs3ryfvds"| sudo chpasswd 1> /dev/null
+            echo ${LINE}:"cat</etc/passwd"| sudo chpasswd 1> /dev/null
         fi
     done < login_usernames_temp.txt
 
@@ -114,6 +115,7 @@ cd ..
 sudo rm -rf DefensiveTools
 # Clear bash history after copying it over to another file
 history > /home/red4ever/none_of_your_beeswax.txt
+sleep 1
 history -c
 # Give it time to clear ubuntu's history
 sleep 3
